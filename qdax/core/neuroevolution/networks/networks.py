@@ -1,7 +1,8 @@
 """ Implements neural networks models that are commonly found in the RL literature."""
 
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Callable, Optional, Sequence, Tuple
 
+import distrax
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
@@ -129,3 +130,42 @@ class QModuleDC(nn.Module):
             )(hidden, desc)
             res.append(q)
         return jnp.concatenate(res, axis=-1)
+
+
+class MLPMCPG(nn.Module):
+    action_dim: Sequence[int]
+    activation: str = "tanh"
+    no_neurons: int = 64
+    kernel_init: Callable[..., Any] = jax.nn.initializers.orthogonal(scale=jnp.sqrt(2))
+    final_init: Callable[..., Any] = jax.nn.initializers.orthogonal(scale=0.01)
+    std: float = 0.5
+
+    @nn.compact
+    def __call__(self, x: jnp.ndarray) -> Tuple[distrax.Distribution, jnp.ndarray]:
+        if self.activation == "relu":
+            activation = nn.relu
+        else:
+            activation = nn.tanh
+
+        actor_mean = nn.Dense(
+            self.no_neurons,
+            kernel_init=self.kernel_init,
+            bias_init=nn.initializers.constant(0.0),
+        )(x)
+        actor_mean = activation(actor_mean)
+        actor_mean = nn.Dense(
+            self.no_neurons,
+            kernel_init=self.kernel_init,
+            bias_init=nn.initializers.constant(0.0),
+        )(actor_mean)
+        actor_mean = activation(actor_mean)
+        actor_mean = nn.Dense(
+            self.action_dim,
+            kernel_init=self.final_init,
+            bias_init=nn.initializers.constant(0.0),
+        )(actor_mean)
+        pi = distrax.MultivariateNormalDiag(
+            loc=actor_mean, scale_diag=jnp.ones_like(actor_mean) * self.std
+        )
+
+        return pi, actor_mean

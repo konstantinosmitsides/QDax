@@ -1,6 +1,8 @@
 absl-py==1.0.0
 brax==0.10.4
 chex==0.1.86
+distrax
+flashbax
 flax==0.8.5
 jax==0.4.28
 jaxlib==0.4.28

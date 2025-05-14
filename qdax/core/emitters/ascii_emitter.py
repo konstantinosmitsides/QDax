@@ -18,13 +18,13 @@ import jax
 import jax.numpy as jnp
 import optax
 from chex import ArrayTree
-from utils import compute_cosine_similarity
 
 from qdax.core.containers.repertoire import Repertoire
 from qdax.core.emitters.emitter import Emitter, EmitterState
 from qdax.core.neuroevolution.buffers.buffer import QDTransition
 from qdax.custom_types import Descriptor, ExtraScores, Fitness, Genotype, RNGKey
 from qdax.environments.base_wrappers import QDEnv
+from qdax.utils.measures import compute_cosine_similarity
 
 # Constants
 EPS = 1e-8
